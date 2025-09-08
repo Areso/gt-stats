@@ -42,11 +42,11 @@ def decipher(ciphered_msg: str, salt: str) -> str:
 def get_obj_stats (cluster, db, table):
     global final_config
     if not cluster in final_config["clusters"]:
-        return {1}
+        return {-1, -1}
     if not db in final_config["clusters"][cluster]["dbs"]:
-        return {1}
+        return {-1, -1}
     if table is None:
-        return {1}
+        return {-1, -1}
     global salt
     db_con = DBConnect(cluster, salt)
     if db is None:
@@ -74,7 +74,7 @@ def get_obj_stats (cluster, db, table):
         rows_number  = myresult[0][0]
         return {rows_number, size_in_mb}
     else:
-        return {}
+        return {0,0}
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
 def check_stats():
