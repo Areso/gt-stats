@@ -91,7 +91,7 @@ def check_stats():
 def cipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
-    password: str      = reqobj.get("pass",None).lower()
+    password: str      = reqobj.get("pass",None)
     return cipher(password,salt), 200, cheaders_p
 
 
@@ -99,7 +99,7 @@ def cipher_pass():
 def decipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
-    password: str      = reqobj.get("pass",None).lower()
+    password: str      = reqobj.get("pass",None)
     return decipher(password,salt), 200, cheaders_p
 
 
