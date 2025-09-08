@@ -5,6 +5,7 @@ import math
 import toml
 import copy
 import sys
+import base64
 
 class DBConnect:
     def __init__(self, cluster, salt):
@@ -16,7 +17,7 @@ class DBConnect:
             passwd    = password,
             database  = config["db"],
             port      = config["port"],
-            connection_timeout=86400,
+            connection_timeout=30,
             auth_plugin = 'mysql_native_password',
             time_zone = '+00:00',
             autocommit= True
@@ -31,11 +32,14 @@ app = Flask(__name__)
 def cipher(msg: str, salt: str) -> str:
     """Cipher a message with a salt using XOR."""
     extended_salt = (salt * (len(msg) // len(salt) + 1))[:len(msg)]
-    return "".join(chr(ord(c) ^ ord(s)) for c, s in zip(msg, extended_salt))
+    ciphed = "".join(chr(ord(c) ^ ord(s)) for c, s in zip(msg, extended_salt))
+    return base64.b64encode(ciphed).decode("utf-8")
 
-def decipher(ciphered_msg: str, salt: str) -> str:
+
+def decipher(ciphered_msg_b64: str, salt: str) -> str:
     """Decipher a message with a salt using XOR."""
     # XOR with the same salt restores the original msg
+    ciphered_msg = base64.b64decode(ciphered_msg_b64)
     extended_salt = (salt * (len(ciphered_msg) // len(salt) + 1))[:len(ciphered_msg)]
     return "".join(chr(ord(c) ^ ord(s)) for c, s in zip(ciphered_msg, extended_salt))
 
@@ -133,20 +137,21 @@ def read_file_content(file_path):
     except IOError as e:
         print(f"Error reading file '{file_path}': {e}")
         sys.exit(1)
-    
+
+
+config       = toml.load("config.toml")
+secrets      = toml.load("secrets.toml")
+final_config = deep_merge(config, secrets)
+salt: str    = read_file_content(final_config["app"]["salt_location"])
+cheaders_p   = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",                    # change to concrete origin if using cookies
+    "Access-Control-Allow-Methods": "POST, OPTIONS",       # string, not list
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Expose-Headers": "Content-Disposition",  # avoid "*"; list real ones if you need any
+    "Access-Control-Max-Age": "600",
+}
+
 if __name__ == '__main__':
-    config       = toml.load("config.toml")
-    secrets      = toml.load("secrets.toml")
-    final_config = deep_merge(config, secrets)
-    salt: str    = read_file_content(final_config["app"]["salt_location"])
-    myconfig     = {}
-    cheaders_p   = {
-        "Content-Type": "application/json; charset=utf-8",
-        "Access-Control-Allow-Origin": "*",                    # change to concrete origin if using cookies
-        "Access-Control-Allow-Methods": "POST, OPTIONS",       # string, not list
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Expose-Headers": "Content-Disposition",  # avoid "*"; list real ones if you need any
-        "Access-Control-Max-Age": "600",
-    }
     app.run(debug=final_config["app"]["debug"], 
             port =final_config["app"]["app_port"])
