@@ -46,12 +46,12 @@ def decipher(ciphered_msg_b64: str, salt: str) -> str:
 def get_obj_stats (cluster, db, table):
     global final_config
     if not cluster in final_config["clusters"]:
-        return [-1, -1]
+        return 0, 0, 400
     if db is not None:
         if not db in final_config["clusters"][cluster]["dbs"]:
-            return [-1, -1]
+            return 0, 0, 400
     if table is None:
-        return [-1, -1]
+        return 0, 0, 400
     global salt
     db_con = DBConnect(cluster, salt)
     if db is None:
@@ -59,7 +59,9 @@ def get_obj_stats (cluster, db, table):
                                      data_length,
                                      index_length
                               FROM  information_schema.tables
-                              WHERE table_name = %(table_name)s""",
+                              WHERE table_name = %(table_name)s
+                              ORDER BY (data_length + index_length) DESC
+                              LIMIT 1""",
                               {"table_name":   table})
     else:
         db_con.cur.execute("""SELECT table_rows, 
@@ -77,9 +79,9 @@ def get_obj_stats (cluster, db, table):
         index_size_b = myresult[0][2]
         size_in_mb = math.ceil( (data_size_b+index_size_b) / (1024*1024) )
         rows_number  = myresult[0][0]
-        return [rows_number, size_in_mb]
+        return rows_number, size_in_mb, 200
     else:
-        return [0,0]
+        return 0, 0, 404
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
 def check_stats():
@@ -87,9 +89,15 @@ def check_stats():
         return "", 204, cheaders_p
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
-    cluster: str       = reqobj.get("cluster",None).lower()
-    db:      str       = reqobj.get("db",None).lower()
-    table:   str       = reqobj.get("table",None).lower()
+    cluster: str       = reqobj.get("cluster",None)
+    if cluster is not None:
+        cluster = cluster.lower()
+    db:      str       = reqobj.get("db",None)
+    if db is not None:
+        db      = db.lower()
+    table:   str       = reqobj.get("table",None)
+    if table is not None:
+        table   = table.lower()
     obj_stats          = get_obj_stats(cluster, db, table)
     return obj_stats, 200, cheaders_p
 
@@ -101,6 +109,8 @@ def cipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None)
+    if password is None:
+        return "password field isnot provided", 400, cheaders_p
     return cipher(password,salt), 200, cheaders_p
 
 
@@ -111,6 +121,8 @@ def decipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None)
+    if password is None:
+        return "password field isnot provided", 400, cheaders_p
     return decipher(password,salt), 200, cheaders_p
 
 
