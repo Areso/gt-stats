@@ -30,25 +30,26 @@ class DBConnect:
 app = Flask(__name__)
 
 def cipher(msg: str, salt: str) -> str:
-    """Cipher a message with a salt using XOR."""
-    extended_salt = (salt * (len(msg) // len(salt) + 1))[:len(msg)]
-    ciphed = "".join(chr(ord(c) ^ ord(s)) for c, s in zip(msg, extended_salt))
-    return base64.b64encode(ciphed).decode("utf-8")
+    m = msg.encode("utf-8")
+    k = salt.encode("utf-8")
+    x = bytes([m[i] ^ k[i % len(k)] for i in range(len(m))])
+    return base64.b64encode(x).decode("utf-8")
 
 
 def decipher(ciphered_msg_b64: str, salt: str) -> str:
-    """Decipher a message with a salt using XOR."""
-    # XOR with the same salt restores the original msg
-    ciphered_msg = base64.b64decode(ciphered_msg_b64)
-    extended_salt = (salt * (len(ciphered_msg) // len(salt) + 1))[:len(ciphered_msg)]
-    return "".join(chr(ord(c) ^ ord(s)) for c, s in zip(ciphered_msg, extended_salt))
+    x = base64.b64decode(ciphered_msg_b64)
+    k = salt.encode("utf-8")
+    m = bytes([x[i] ^ k[i % len(k)] for i in range(len(x))])
+    return m.decode("utf-8")
+
 
 def get_obj_stats (cluster, db, table):
     global final_config
     if not cluster in final_config["clusters"]:
         return [-1, -1]
-    if not db in final_config["clusters"][cluster]["dbs"]:
-        return [-1, -1]
+    if db is not None:
+        if not db in final_config["clusters"][cluster]["dbs"]:
+            return [-1, -1]
     if table is None:
         return [-1, -1]
     global salt
@@ -82,6 +83,8 @@ def get_obj_stats (cluster, db, table):
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
 def check_stats():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     cluster: str       = reqobj.get("cluster",None).lower()
@@ -93,6 +96,8 @@ def check_stats():
 
 @app.route('/__cipher_pass', methods=['POST','OPTIONS'])
 def cipher_pass():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None)
@@ -101,6 +106,8 @@ def cipher_pass():
 
 @app.route('/__decipher_pass', methods=['POST','OPTIONS'])
 def decipher_pass():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None)
