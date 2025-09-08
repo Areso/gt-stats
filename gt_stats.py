@@ -43,7 +43,7 @@ def get_obj_stats (cluster, db, table):
     global final_config
     if not cluster in final_config["clusters"]:
         return {1}
-    if not db in final_config["clusters"]["dbs"]:
+    if not db in final_config["clusters"][cluster]["dbs"]:
         return {1}
     if table is None:
         return {1}
@@ -70,9 +70,9 @@ def get_obj_stats (cluster, db, table):
     if len(myresult)>0:
         data_size_b  = myresult[0][1]
         index_size_b = myresult[0][2]
-        size_in_mb = math.ceil(data_size_b+index_size_b/1024/1024)
+        size_in_mb = math.ceil((data_size_b+index_size_b)/1024/1024)
         rows_number  = myresult[0][0]
-        return rows_number, size_in_mb
+        return {rows_number, size_in_mb}
     else:
         return {}
 
@@ -84,7 +84,7 @@ def check_stats():
     db:      str       = reqobj.get("db",None).lower()
     table:   str       = reqobj.get("table",None).lower()
     obj_stats          = get_obj_stats(cluster, db, table)
-    return {"cont":obj_stats}, 200, cheaders_p
+    return obj_stats, 200, cheaders_p
 
 
 @app.route('/__cipher_pass', methods=['POST','OPTIONS'])
