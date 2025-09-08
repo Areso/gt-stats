@@ -80,9 +80,9 @@ def get_obj_stats (cluster, db, table):
 def check_stats():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
-    cluster: str       = reqobj.get("migration",None).lower()
-    db:      str       = reqobj.get("cluster",None).lower()
-    table:   str       = reqobj.get("cluster",None).lower()
+    cluster: str       = reqobj.get("cluster",None).lower()
+    db:      str       = reqobj.get("db",None).lower()
+    table:   str       = reqobj.get("table",None).lower()
     obj_stats          = get_obj_stats(cluster, db, table)
     return {"cont":obj_stats}, 200, cheaders_p
 
