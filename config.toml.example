@@ -1,0 +1,15 @@
+[app]
+app_port=5555
+salt_location="/root/salt"
+
+[clusters.cluster1]
+host="company.com"
+port=3306
+user="myuser"
+dbs=["db1","db2"]
+
+[clusters.cluster2]
+host="empresa.es"
+port=3306
+user="myuser"
+dbs=["bd1","bd2"]
