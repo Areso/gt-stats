@@ -47,7 +47,8 @@ def get_obj_stats (cluster, db, table):
         return {1}
     if table is None:
         return {1}
-    db_con = DBConnect(cluster)
+    global salt
+    db_con = DBConnect(cluster, salt)
     if db is None:
         db_con.cur.execute("""SELECT table_rows, 
                                      data_length,
