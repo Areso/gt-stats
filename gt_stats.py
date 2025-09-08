@@ -76,7 +76,7 @@ def get_obj_stats (cluster, db, table):
         return {}
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
-def check_migration():
+def check_stats():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     cluster: str       = reqobj.get("migration",None).lower()
@@ -87,7 +87,7 @@ def check_migration():
 
 
 @app.route('/__cipher_pass', methods=['POST','OPTIONS'])
-def check_migration():
+def cipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None).lower()
@@ -95,7 +95,7 @@ def check_migration():
 
 
 @app.route('/__decipher_pass', methods=['POST','OPTIONS'])
-def check_migration():
+def decipher_pass():
     reqdata            = request.get_data().decode()
     reqobj             = json.loads(reqdata)
     password: str      = reqobj.get("pass",None).lower()
