@@ -70,7 +70,7 @@ def get_obj_stats (cluster, db, table):
     if len(myresult)>0:
         data_size_b  = myresult[0][1]
         index_size_b = myresult[0][2]
-        size_in_mb = math.ceil((data_size_b+index_size_b)/1024/1024)
+        size_in_mb = math.ceil( (data_size_b+index_size_b) / (1024*1024) )
         rows_number  = myresult[0][0]
         return {rows_number, size_in_mb}
     else:
