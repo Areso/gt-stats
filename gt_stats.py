@@ -148,4 +148,5 @@ if __name__ == '__main__':
         "Access-Control-Expose-Headers": "Content-Disposition",  # avoid "*"; list real ones if you need any
         "Access-Control-Max-Age": "600",
     }
-    app.run(debug=True, port=final_config["app"]["app_port"])
+    app.run(debug=final_config["app"]["debug"], 
+            port =final_config["app"]["app_port"])

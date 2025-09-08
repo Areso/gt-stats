@@ -1,5 +1,6 @@
 [app]
 app_port=5555
+debug=true
 salt_location="/root/salt"
 
 [clusters.cluster1]
