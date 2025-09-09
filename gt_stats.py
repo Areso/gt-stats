@@ -104,7 +104,7 @@ def get_obj_stats (cluster, db, table):
         # Debug: print executed query
         if True:
             if hasattr(db_con.cur, "_last_executed"):   # MySQL
-                print("Executed query:", db_con.cur._last_executed)
+                print("Executed query:", db_con.cur.statement)
             else:
                 print("Executed query text unavailable (no attribute for this driver)")
 
