@@ -42,6 +42,20 @@ def decipher(ciphered_msg_b64: str, salt: str) -> str:
     m = bytes([x[i] ^ k[i % len(k)] for i in range(len(x))])
     return m.decode("utf-8")
 
+def get_databases(cluster):
+    global final_config
+    if not cluster in final_config["clusters"]:
+        return [], 400
+    db_con = DBConnect(cluster, salt)
+    try:
+        db_con.cur.execute("""SHOW DATABASES""")
+        row = db_con.cur.fetchall()
+        if not row:
+            return [], 404
+        return row, 200
+    finally:
+        db_con.close()
+
 
 def get_obj_stats (cluster, db, table):
     global final_config
@@ -82,6 +96,19 @@ def get_obj_stats (cluster, db, table):
         return rows_number, size_in_mb, 200
     finally:
         db_con.close()
+
+
+@app.route('/databases_list', methods=['POST','OPTIONS'])
+def databases_list():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    payload = request.get_json(force=True, silent=True)
+    if payload is None:
+        return {"error": "invalid JSON"}, 400, cheaders_p
+    cluster = (payload.get("cluster") or "").lower()
+    databases, status = get_databases(cluster)
+    return databases, status, cheaders_p
+
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
 def check_stats():
