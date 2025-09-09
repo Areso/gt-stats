@@ -159,8 +159,8 @@ def check_stats():
     if payload is None:
         return {"error": "invalid JSON"}, 400, cheaders_p
     cluster = (payload.get("cluster") or "").lower()
-    db      = payload.get("db")
-    table   = (payload.get("table") or "").lower()
+    db      = payload.get("db", "mysql").lower()
+    table   = payload.get("table")
 
     rows, size_mb, status = get_obj_stats(cluster, db, table)
     return {"rows": rows, "size_mb": size_mb}, status, cheaders_p
