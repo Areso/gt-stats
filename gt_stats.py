@@ -8,14 +8,14 @@ import sys
 import base64
 
 class DBConnect:
-    def __init__(self, cluster, salt):
+    def __init__(self, cluster, salt, db="mysql"):
         config   = final_config["clusters"][cluster]
         password = decipher(config["pass"], salt)
         self.con = mysql.connector.connect(
             host      = config["host"],
             user      = config["user"],
             passwd    = password,
-            database  = "mysql", #config["db"],
+            database  = db,
             port      = config["port"],
             connection_timeout=30,
             auth_plugin = 'mysql_native_password',
@@ -49,10 +49,25 @@ def get_databases(cluster):
     db_con = DBConnect(cluster, salt)
     try:
         db_con.cur.execute("""SHOW DATABASES""")
-        row = db_con.cur.fetchall()
-        if not row:
+        dbs = db_con.cur.fetchall()
+        if not dbs:
             return [], 404
-        return row, 200
+        return dbs, 200
+    finally:
+        db_con.close()
+
+
+def get_tables(cluster, db):
+    global final_config
+    if not cluster in final_config["clusters"]:
+        return [], 400
+    db_con = DBConnect(cluster, salt, db)
+    try:
+        db_con.cur.execute("""SHOW TABLES""")
+        tables = db_con.cur.fetchall()
+        if not tables:
+            return [], 404
+        return tables, 200
     finally:
         db_con.close()
 
@@ -108,6 +123,19 @@ def databases_list():
     cluster = (payload.get("cluster") or "").lower()
     databases, status = get_databases(cluster)
     return databases, status, cheaders_p
+
+
+@app.route('/tables_list', methods=['POST','OPTIONS'])
+def tables_list():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    payload = request.get_json(force=True, silent=True)
+    if payload is None:
+        return {"error": "invalid JSON"}, 400, cheaders_p
+    cluster = (payload.get("cluster") or "").lower()
+    db = (payload.get("db") or "").lower()
+    tables, status = get_tables(cluster, db)
+    return tables, status, cheaders_p
 
 
 @app.route('/check_stats', methods=['POST','OPTIONS'])
