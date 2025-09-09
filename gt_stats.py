@@ -99,10 +99,16 @@ def get_obj_stats (cluster, db, table):
             """
             params = {"table_name": table, "table_schema": db}
 
-        # Debug: print query with values
-        print("Executing query:")
-        print(db_con.cur.mogrify(query, params).decode("utf-8"))
+        db_con.cur.execute(query, params)
 
+        # Debug: print executed query
+        if True:
+            if hasattr(db_con.cur, "_last_executed"):   # MySQL
+                print("Executed query:", db_con.cur._last_executed)
+            else:
+                print("Executed query text unavailable (no attribute for this driver)")
+
+        row = db_con.cur.fetchone()
         db_con.cur.execute(query, params)
 
         row = db_con.cur.fetchone()
