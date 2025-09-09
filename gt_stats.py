@@ -10,7 +10,7 @@ import base64
 class DBConnect:
     def __init__(self, cluster, salt):
         config   = final_config["clusters"][cluster]
-        password = decipher(config["password"], salt)
+        password = decipher(config["pass"], salt)
         self.con = mysql.connector.connect(
             host      = config["host"],
             user      = config["user"],
