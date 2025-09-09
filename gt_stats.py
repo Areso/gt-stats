@@ -96,7 +96,7 @@ def get_obj_stats (cluster, db, table):
                 WHERE table_name = %(table_name)s
                   AND table_schema = %(table_schema)s
             """, {"table_name": table, "table_schema": db})
-
+        print(db_con.cur._last_executed))
         row = db_con.cur.fetchone()
         if not row:
             return 0, 0, 404
