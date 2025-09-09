@@ -151,7 +151,7 @@ def tables_list():
     return tables, status, cheaders_p
 
 
-@app.route('/check_stats', methods=['POST','OPTIONS'])
+@app.route('/table_stats', methods=['POST','OPTIONS'])
 def check_stats():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
@@ -160,7 +160,6 @@ def check_stats():
         return {"error": "invalid JSON"}, 400, cheaders_p
     cluster = (payload.get("cluster") or "").lower()
     db      = payload.get("db")
-    db      = db.lower() if isinstance(db, str) else None
     table   = (payload.get("table") or "").lower()
 
     rows, size_mb, status = get_obj_stats(cluster, db, table)
