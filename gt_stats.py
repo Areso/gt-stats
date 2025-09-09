@@ -76,9 +76,6 @@ def get_obj_stats (cluster, db, table):
     global final_config
     if not cluster in final_config["clusters"]:
         return 0, 0, 400
-    if db is not None:
-        if not db in final_config["clusters"][cluster]["dbs"]:
-            return 0, 0, 400
     if table is None:
         return 0, 0, 400
     global salt
