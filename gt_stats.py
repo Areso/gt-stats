@@ -15,7 +15,7 @@ class DBConnect:
             host      = config["host"],
             user      = config["user"],
             passwd    = password,
-            database  = config["db"],
+            database  = "mysql" #config["db"],
             port      = config["port"],
             connection_timeout=30,
             auth_plugin = 'mysql_native_password',
