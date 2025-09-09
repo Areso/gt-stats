@@ -82,21 +82,29 @@ def get_obj_stats (cluster, db, table):
     db_con = DBConnect(cluster, salt)
     try:
         if db is None:
-            db_con.cur.execute("""
+            query = """
                 SELECT table_rows, data_length, index_length
                 FROM information_schema.tables
                 WHERE table_name = %(table_name)s
                 ORDER BY (data_length + index_length) DESC
                 LIMIT 1
-            """, {"table_name": table})
+            """
+            params = {"table_name": table}
         else:
-            db_con.cur.execute("""
+            query = """
                 SELECT table_rows, data_length, index_length
                 FROM information_schema.tables
                 WHERE table_name = %(table_name)s
                   AND table_schema = %(table_schema)s
-            """, {"table_name": table, "table_schema": db})
-        print(db_con.cur._last_executed)
+            """
+            params = {"table_name": table, "table_schema": db}
+
+        # Debug: print query with values
+        print("Executing query:")
+        print(db_con.cur.mogrify(query, params).decode("utf-8"))
+
+        db_con.cur.execute(query, params)
+
         row = db_con.cur.fetchone()
         if not row:
             return 0, 0, 404
