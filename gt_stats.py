@@ -153,7 +153,7 @@ def read_file_content(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
-        if salt=="":
+        if content=="":
             print(f"Salt is empty file. Put some data")
             sys.exit(1)
         return content
