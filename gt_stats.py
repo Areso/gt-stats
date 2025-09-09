@@ -109,6 +109,8 @@ def get_obj_stats (cluster, db, table):
         index_size_b = int(row[2] or 0)
         size_in_mb   = math.ceil((data_size_b + index_size_b) / (1024 * 1024))
         return rows_number, size_in_mb, 200
+    except Exception as e:
+        print(f"An error occurred: {e}")
     finally:
         db_con.close()
 
