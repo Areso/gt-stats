@@ -150,8 +150,7 @@ def tables_list():
     tables, status = get_tables(cluster, db)
     return tables, status, cheaders_p
 
-
-@app.route('/table_stats', methods=['POST','OPTIONS'])
+@app.route('/is_it_safe_to_proceed', methods=['POST','OPTIONS'])
 def check_stats():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
@@ -171,6 +170,20 @@ def check_stats():
         return {"safe_to_proceed": "false"}, status, cheaders_p
 
     return {"safe_to_proceed": "true"}, status, cheaders_p
+
+@app.route('/table_stats', methods=['POST','OPTIONS'])
+def check_stats():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    payload = request.get_json(force=True, silent=True)
+    if payload is None:
+        return {"error": "invalid JSON"}, 400, cheaders_p
+    cluster = (payload.get("cluster") or "").lower()
+    db      = payload.get("db", "mysql").lower()
+    table   = payload.get("table")
+
+    rows, size_mb, status = get_obj_stats(cluster, db, table)
+    return {"rows": rows, "size_mb": size_mb}, status, cheaders_p
 
 
 @app.route('/__cipher_pass', methods=['POST','OPTIONS'])
