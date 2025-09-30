@@ -268,4 +268,5 @@ cheaders_p   = {
 
 if __name__ == '__main__':
     app.run(debug=final_config["app"]["debug"], 
-            port =final_config["app"]["app_port"])
+            port =final_config["app"]["app_port"],
+            host=final_config["app"]["host"])

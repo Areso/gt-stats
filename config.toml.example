@@ -1,5 +1,6 @@
 [app]
 app_port=5555
+host="0.0.0.0"
 debug=true
 salt_location="/root/salt"
 t_size_threshold_mb=2000
