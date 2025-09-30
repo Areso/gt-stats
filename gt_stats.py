@@ -163,7 +163,14 @@ def check_stats():
     table   = payload.get("table")
 
     rows, size_mb, status = get_obj_stats(cluster, db, table)
-    return {"rows": rows, "size_mb": size_mb}, status, cheaders_p
+
+    if size_mb >= final_config["app"]["t_size_threshold_mb"]:
+        return {"safe_to_proceed": "false"}, status, cheaders_p
+
+    if rows >= final_config["app"]["t_size_threshold_rows"]:
+        return {"safe_to_proceed": "false"}, status, cheaders_p
+
+    return {"safe_to_proceed": "true"}, status, cheaders_p
 
 
 @app.route('/__cipher_pass', methods=['POST','OPTIONS'])
