@@ -151,7 +151,7 @@ def tables_list():
     return tables, status, cheaders_p
 
 @app.route('/is_it_safe_to_proceed', methods=['POST','OPTIONS'])
-def check_stats():
+def is_safe():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
     payload = request.get_json(force=True, silent=True)
