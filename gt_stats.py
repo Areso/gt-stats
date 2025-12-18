@@ -206,7 +206,7 @@ def migrations_read():
 
 
 @app.route('/clusters_list', methods=['POST','OPTIONS'])
-def is_safe():
+def clusters_list():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
     clusters_obj = final_config["cluster"]
