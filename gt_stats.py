@@ -42,6 +42,7 @@ def decipher(ciphered_msg_b64: str, salt: str) -> str:
     m = bytes([x[i] ^ k[i % len(k)] for i in range(len(x))])
     return m.decode("utf-8")
 
+
 def get_databases(cluster):
     global final_config
     if not cluster in final_config["clusters"]:
@@ -149,6 +150,53 @@ def tables_list():
     db = (payload.get("db") or "").lower()
     tables, status = get_tables(cluster, db)
     return tables, status, cheaders_p
+
+
+def get_migrations(cluster, db, migrations_table):
+    global final_config
+    if not cluster in final_config["clusters"]:
+        return [], 400
+    db_con = DBConnect(cluster, salt)
+    try:
+        cur = db_con.cursor(dictionary=True)
+        try:
+            cur.execute("""SELECT * FROM %(db)s.%(m_table)s""",
+                        "db": db,
+                        "m_table": migrations_table)
+            return cur.fetchall(), 0  
+        except mysql.connector.errors.ProgrammingError as e:
+            # 1146: Table doesn't exist
+            if getattr(e, "errno", None) == 1146:
+                return [], -2
+            else:
+                return [], -1
+            raise
+        finally:
+            cur.close()
+    finally:
+        db_con.close()
+
+
+@app.route('/migrations_read', methods=['POST','OPTIONS'])
+def migrations_read():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    payload = request.get_json(force=True, silent=True)
+    if payload is None:
+        return {"error": "invalid JSON"}, 400, cheaders_p
+    cluster = payload.get("cluster", None).lower()
+    if cluster is None:
+        return {"error": "cluster value is not provided"}, 400, cheaders_p
+    db      = payload.get("db", None).lower()
+    if db is None:
+        return {"error": "db value is not provided"}, 400, cheaders_p
+    
+    migrations_table   = "migrations"
+    migrations, status = get_migrations(cluster, db, migrations_table)
+    if status == -1:
+        return {"error": "db value is not provided"}, 400, cheaders_p
+    return migrations, 200
+
 
 @app.route('/is_it_safe_to_proceed', methods=['POST','OPTIONS'])
 def is_safe():
