@@ -6,6 +6,7 @@ import toml
 import copy
 import sys
 import base64
+import re
 
 class DBConnect:
     def __init__(self, cluster, salt, db="mysql"):
@@ -152,6 +153,12 @@ def tables_list():
     return tables, status, cheaders_p
 
 
+_ident = re.compile(r"^[A-Za-z0-9_]+$")
+def ident(name: str) -> str:
+    if not _ident.match(name):
+        raise ValueError(f"Invalid identifier: {name!r}")
+    return f"`{name}`"  # backtick-quote identifier
+
 def get_migrations(cluster, db, migrations_table):
     global final_config
     if not cluster in final_config["clusters"]:
@@ -160,10 +167,10 @@ def get_migrations(cluster, db, migrations_table):
     try:
         cur = db_con.cursor(dictionary=True)
         try:
-            cur.execute("""SELECT * FROM %(db)s.%(m_table)s""",
-                        "db": db,
-                        "m_table": migrations_table)
-            return cur.fetchall(), 0  
+            sql = f"SELECT * FROM {ident(db)}.{ident(migrations_table)}"
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows, 0  
         except mysql.connector.errors.ProgrammingError as e:
             # 1146: Table doesn't exist
             if getattr(e, "errno", None) == 1146:
