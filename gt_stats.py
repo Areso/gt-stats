@@ -210,9 +210,9 @@ def clusters_list():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
     clusters_obj = final_config["cluster"]
-    for cluster_ob in clusters_obj:
-        print(cluster_ob)
-    return "OK", 200
+    names     = list(final_config.get("clusters", {}).keys())
+    names_str = (",".join(names))
+    return names_str, 200
 
 @app.route('/is_it_safe_to_proceed', methods=['POST','OPTIONS'])
 def is_safe():
