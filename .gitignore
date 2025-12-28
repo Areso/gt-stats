@@ -1,2 +1,5 @@
 secrets.toml
 config.toml
+.venv
+.venv/
+salt

@@ -6,6 +6,7 @@ import toml
 import copy
 import sys
 import base64
+import re
 
 class DBConnect:
     def __init__(self, cluster, salt, db="mysql"):
@@ -41,6 +42,7 @@ def decipher(ciphered_msg_b64: str, salt: str) -> str:
     k = salt.encode("utf-8")
     m = bytes([x[i] ^ k[i % len(k)] for i in range(len(x))])
     return m.decode("utf-8")
+
 
 def get_databases(cluster):
     global final_config
@@ -134,6 +136,8 @@ def databases_list():
     if payload is None:
         return {"error": "invalid JSON"}, 400, cheaders_p
     cluster = (payload.get("cluster") or "").lower()
+    if cluster=="":
+        return {"error": "cluster name didn't provided"}, 400, cheaders_p
     databases, status = get_databases(cluster)
     return databases, status, cheaders_p
 
@@ -149,6 +153,72 @@ def tables_list():
     db = (payload.get("db") or "").lower()
     tables, status = get_tables(cluster, db)
     return tables, status, cheaders_p
+
+
+_ident = re.compile(r"^[A-Za-z0-9_]+$")
+def ident(name: str) -> str:
+    if not _ident.match(name):
+        raise ValueError(f"Invalid identifier: {name!r}")
+    return f"`{name}`"  # backtick-quote identifier
+
+def get_migrations(cluster, db, migrations_table):
+    global final_config
+    if not cluster in final_config["clusters"]:
+        return [], 400
+    db_con = DBConnect(cluster, salt)
+    try:
+        cur = db_con.cursor(dictionary=True)
+        try:
+            sql = f"SELECT * FROM {ident(db)}.{ident(migrations_table)}"
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows, 0  
+        except mysql.connector.errors.ProgrammingError as e:
+            # 1146: Table doesn't exist
+            if getattr(e, "errno", None) == 1146:
+                return [], -2
+            else:
+                return [], -1
+            raise
+        finally:
+            cur.close()
+    finally:
+        db_con.close()
+
+
+@app.route('/migrations_read', methods=['POST','OPTIONS'])
+def migrations_read():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    payload = request.get_json(force=True, silent=True)
+    if payload is None:
+        return {"error": "invalid JSON"}, 400, cheaders_p
+    cluster = payload.get("cluster", None).lower()
+    if cluster is None:
+        return {"error": "cluster value is not provided"}, 400, cheaders_p
+    db      = payload.get("db", None).lower()
+    if db is None:
+        return {"error": "db value is not provided"}, 400, cheaders_p
+    
+    migrations_table   = "migrations"
+    migrations, status = get_migrations(cluster, db, migrations_table)
+    if status == -1:
+        return {"error": "db value is not provided"}, 400, cheaders_p
+    return migrations, 200
+
+
+@app.route('/known_clusters_list', methods=['POST','OPTIONS'])
+def known_clusters_list():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    clusters = list(final_config["clusters"].keys())
+    return clusters, 200
+
+@app.route('/healthcheck', methods=['GET','POST','OPTIONS'])
+def healthcheck():
+    if request.method == 'OPTIONS':
+        return "", 204, cheaders_p
+    return "OK", 200
 
 @app.route('/is_it_safe_to_proceed', methods=['POST','OPTIONS'])
 def is_safe():
