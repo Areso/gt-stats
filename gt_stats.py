@@ -179,7 +179,6 @@ def get_migrations(cluster, db, migrations_table):
                 return [], -2
             else:
                 return [], -1
-            raise
         finally:
             cur.close()
     finally:
