@@ -167,11 +167,10 @@ def get_migrations(cluster, db, migrations_table):
         return [], 400
     db_con = DBConnect(cluster, salt)
     try:
-        cur = db_con.cursor(dictionary=True)
         try:
             sql = f"SELECT * FROM {ident(db)}.{ident(migrations_table)}"
-            cur.execute(sql)
-            rows = cur.fetchall()
+            db_con.cur.cur.execute(sql)
+            rows = db_con.cur.fetchall()
             return rows, 0  
         except mysql.connector.errors.ProgrammingError as e:
             # 1146: Table doesn't exist
@@ -179,8 +178,8 @@ def get_migrations(cluster, db, migrations_table):
                 return [], -2
             else:
                 return [], -1
-        finally:
-            cur.close()
+        #finally:
+        #    db_con.cur.close()
     finally:
         db_con.close()
 
