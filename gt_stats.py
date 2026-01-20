@@ -169,7 +169,7 @@ def get_migrations(cluster, db, migrations_table):
     try:
         try:
             sql = f"SELECT * FROM {ident(db)}.{ident(migrations_table)}"
-            db_con.cur.cur.execute(sql)
+            db_con.cur.execute(sql)
             rows = db_con.cur.fetchall()
             return rows, 0  
         except mysql.connector.errors.ProgrammingError as e:
