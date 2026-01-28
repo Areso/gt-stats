@@ -323,7 +323,9 @@ def read_file_content(file_path):
 config       = toml.load("config.toml")
 secrets      = toml.load("clusters.toml")
 final_config = deep_merge(config, secrets)
-salt: str    = read_file_content(final_config["app"]["salt_location"]).strip()
+
+if final_config.get("salt_location", None) is not None:
+    salt: str    = read_file_content(final_config["app"]["salt_location"]).strip()
 
 cheaders_p   = {
     "Content-Type": "application/json; charset=utf-8",
