@@ -9,15 +9,17 @@ import base64
 import re
 
 class DBConnect:
-    def __init__(self, cluster, salt, db="mysql"):
-        config   = final_config["clusters"][cluster]
-        password = decipher(config["pass"], salt)
+    def __init__(self, cluster, salt: str, db: str="mysql"):
+        if salt is not None:
+            password = decipher(cluster.get("pwd"), salt)
+        else:
+            password = cluster.get("pwd")
         self.con = mysql.connector.connect(
-            host      = config["host"],
-            user      = config["user"],
+            host      = cluster.get("host"),
+            user      = cluster.get("user"),
             passwd    = password,
             database  = db,
-            port      = config["port"],
+            port      = cluster.get("port"),
             connection_timeout=30,
             auth_plugin = 'mysql_native_password',
             time_zone = '+00:00',
@@ -45,10 +47,7 @@ def decipher(ciphered_msg_b64: str, salt: str) -> str:
 
 
 def get_databases(cluster):
-    global final_config
-    if not cluster in final_config["clusters"]:
-        return [], 400
-    db_con = DBConnect(cluster, salt)
+    db_con = DBConnect(cluster, salt=None)
     try:
         db_con.cur.execute("""SHOW DATABASES""")
         dbs = db_con.cur.fetchall()
@@ -138,7 +137,13 @@ def databases_list():
     cluster = (payload.get("cluster") or "").lower()
     if cluster=="":
         return {"error": "cluster name didn't provided"}, 400, cheaders_p
-    databases, status = get_databases(cluster)
+    
+    clusters = list(final_config["clusters"].keys())
+    if cluster not in clusters:
+        return {"error": "cluster not found in clusters.toml"}, 404, cheaders_p
+
+    cluster_obj = clusters[cluster]
+    databases, status = get_databases(cluster_obj)
     return databases, status, cheaders_p
 
 
