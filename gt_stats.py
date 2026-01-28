@@ -209,7 +209,7 @@ def migrations_read():
 def known_clusters_list():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
-    clusters = list(final_config["gt_clusters"].keys())
+    clusters = list(final_config["clusters"].keys())
     return clusters, 200
 
 @app.route('/healthcheck', methods=['GET','POST','OPTIONS'])
