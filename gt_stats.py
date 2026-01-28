@@ -209,7 +209,7 @@ def migrations_read():
 def known_clusters_list():
     if request.method == 'OPTIONS':
         return "", 204, cheaders_p
-    clusters = list(final_config["clusters"].keys())
+    clusters = list(final_config["gt_clusters"].keys())
     return clusters, 200
 
 @app.route('/healthcheck', methods=['GET','POST','OPTIONS'])
@@ -321,7 +321,7 @@ def read_file_content(file_path):
 
 
 config       = toml.load("config.toml")
-secrets      = toml.load("secrets.toml")
+secrets      = toml.load("clusters.toml")
 final_config = deep_merge(config, secrets)
 salt: str    = read_file_content(final_config["app"]["salt_location"]).strip()
 

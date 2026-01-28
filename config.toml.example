@@ -5,15 +5,3 @@ debug=true
 salt_location="/root/salt"
 t_size_threshold_mb=2000
 t_size_threshold_rows=1000000
-
-[clusters.cluster1]
-host="company.com"
-port=3306
-user="myuser"
-dbs=["db1","db2"]
-
-[clusters.cluster2]
-host="empresa.es"
-port=3306
-user="myuser"
-dbs=["bd1","bd2"]
