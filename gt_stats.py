@@ -142,7 +142,7 @@ def databases_list():
     if cluster not in clusters:
         return {"error": "cluster not found in clusters.toml"}, 404, cheaders_p
 
-    cluster_obj = clusters[cluster]
+    cluster_obj = final_config["clusters"][cluster]
     databases, status = get_databases(cluster_obj)
     return databases, status, cheaders_p
 
